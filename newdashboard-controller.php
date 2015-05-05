@@ -57,13 +57,24 @@ class Newdashboard extends CI_Controller {
     // $end = implode('/', array_reverse(explode('-', $end)));
     // echo $this->dateFormatter("2015-05-01");
 
+    $start = str_replace('/','-',$start);
+    $end = str_replace('/','-',$end);
+
+    // $start = "2015-05-01";
+    // $end = "2015-05-05";
+
+
+    $date_interval_obj = date_diff(date_create($start), date_create($end));// date_diff() works in yyyy-mm--dd . e.g. 2013-03-15
+    // var_dump($date_interval_obj->format("%a")); // format("%R%a") will give string(2) "+4"   --where--   format("%a") gives string(1) "4"
+    $date_interval = $date_interval_obj->format("%a");
+
     $start = $this->dateFormatter($start);
     $end = $this->dateFormatter($end);
 
     $start_comparison = date('m-d-Y',strtotime($start . "+1 days"));
 
 
-    $response = array('start'=> $start, 'end' => $end, 'start_comparison' => $start_comparison);
+    $response = array('start'=> $start, 'end' => $end, 'start_comparison' => $start_comparison, 'interval'=> $date_interval);
     echo json_encode($response);
     // $this->getInventoryData();
     // echo json_encode($this->getMISdata());

@@ -29,28 +29,28 @@
 
 <script>
         $(function() { 
-            $("#selector_dateRange").daterangepicker(); 
+          $("#selector_dateRange").daterangepicker(); 
 
-            $("#submit_dateRange").click(function () 
-                {
-                    // alert("Selected range is: ");
-                    var selectedRange = $("#selector_dateRange").val();
-                    if (selectedRange) //proceed only if selectedRange is truthy. i.e. selectedRange is neither null nor undefined
-                    {
-                        // alert("Input value is: " + selectedRange);   // {"START":"2015-04-25","END":"2015-05-01"}
-                        // $('#content-wrapper > div.page-header > div > h1 > div').text(selectedRange);
-                        var parsed_selectedRange = JSON.parse(selectedRange);
-                        // var start = parsed.start;
-                        // var end = parsed.end;
+          $("#submit_dateRange").click(function () 
+            {
+              // alert("Selected range is: ");
+              var selectedRange = $("#selector_dateRange").val();
+              if (selectedRange) //proceed only if selectedRange is truthy. i.e. selectedRange is neither null nor undefined
+              {
+                // alert("Input value is: " + selectedRange); // {"START":"2015-04-25","END":"2015-05-01"}
+                // $('#content-wrapper > div.page-header > div > h1 > div').text(selectedRange);
+                var parsed_selectedRange = JSON.parse(selectedRange);
+                // var start = parsed.start;
+                // var end = parsed.end;
                 console.log("passing this throught ajax:");
-                        console.log("start date: "+parsed_selectedRange.start+", end date: "+parsed_selectedRange.end);
+                console.log("start date: "+parsed_selectedRange.start+", end date: "+parsed_selectedRange.end);
 
                 //ajax :
                 $.ajax({
                   type: "POST",
                   url: '<?php echo site_url("newdashboard").'/submitDateRange';?>', 
                   data: parsed_selectedRange, 
-                  dataType: 'json',
+                  // dataType: 'json',
                   // async: false, //This is deprecated in the latest version of jquery must use now callbacks
                   success: function(d)
                   {
@@ -85,9 +85,9 @@
                 });
               
 
-                                }
-                            });
-                            
+                          }
+                        });
+                    
                     });
 </script>
 </head>
