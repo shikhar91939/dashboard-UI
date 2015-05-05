@@ -28,67 +28,71 @@
 
 
 <script>
-        $(function() { 
-          $("#selector_dateRange").daterangepicker(); 
+  var baseUrl = <?php echo'"'.base_url().'"' ;?>;
+  $(function() { 
+    $("#selector_dateRange").daterangepicker(); 
 
-          $("#submit_dateRange").click(function () 
+    $("#submit_dateRange").click(function () 
+      {
+        // alert("Selected range is: ");
+        var selectedRange = $("#selector_dateRange").val();
+        if (selectedRange) //proceed only if selectedRange is truthy. i.e. selectedRange is neither null nor undefined
+        {
+          // alert("Input value is: " + selectedRange); // {"START":"2015-04-25","END":"2015-05-01"}
+          // $('#content-wrapper > div.page-header > div > h1 > div').text(selectedRange);
+          var parsed_selectedRange = JSON.parse(selectedRange);
+          // var start = parsed.start;
+          // var end = parsed.end;
+          console.log("passing this throught ajax:");
+          console.log("start date: "+parsed_selectedRange.start+", end date: "+parsed_selectedRange.end);
+
+          //ajax :
+          $.ajax({
+            type: "POST",
+            url: '<?php echo site_url("newdashboard").'/submitDateRange';?>', 
+            data: parsed_selectedRange, 
+            dataType: 'json',
+            // async: false, //This is deprecated in the latest version of jquery must use now callbacks
+            success: function(d)
             {
-              // alert("Selected range is: ");
-              var selectedRange = $("#selector_dateRange").val();
-              if (selectedRange) //proceed only if selectedRange is truthy. i.e. selectedRange is neither null nor undefined
+              console.log(d);
+              // return;
+              dStringified = JSON.stringify(d);
+
+              //mis update
+              $('#mis_upload_count').text(d.mis_upload_count);
+              $('#diff_mis').text(d.diff_mis);
+              if (d.isDiffPositive)         // add this: change image to green/red arrow acc. to diff +ve /-ve
               {
-                // alert("Input value is: " + selectedRange); // {"START":"2015-04-25","END":"2015-05-01"}
-                // $('#content-wrapper > div.page-header > div > h1 > div').text(selectedRange);
-                var parsed_selectedRange = JSON.parse(selectedRange);
-                // var start = parsed.start;
-                // var end = parsed.end;
-                console.log("passing this throught ajax:");
-                console.log("start date: "+parsed_selectedRange.start+", end date: "+parsed_selectedRange.end);
-
-                //ajax :
-                $.ajax({
-                  type: "POST",
-                  url: '<?php echo site_url("newdashboard").'/submitDateRange';?>', 
-                  data: parsed_selectedRange, 
-                  // dataType: 'json',
-                  // async: false, //This is deprecated in the latest version of jquery must use now callbacks
-                  success: function(d)
-                  {
-                    console.log(d);
-                    return;
-                    dStringified = JSON.stringify(d);
-                    $('#mis_upload_count').text(d.mis_upload_count);
-                    $('#diff_mis').text(d.diff_mis);
-                    //add this: change image to green/red arrow acc. to diff +ve /-ve
-                    $('#mis_percent_display').text(d.mis_percent_display+"%");
-
-                    // $('#dumpDiv').text(dStringified);
-                    // console.log(dStringified);
-                    console.log(d.mis_upload_count);
-                    console.log(d.diff_mis);
-                    console.log(d.mis_percent_display);
+                console.log(true);
+                //echo "src=\"". base_url() ."assets/images/template/red-arrow.png\"";
+                // $('mis_arrow_img').attr('src',baseUrl+'assets/images/template/green-arrow.png');
+                $('mis_arrow_img').attr('src','http://overboxd.com/vicky/assets/images/template/green-arrow.png');
+              } 
+              else 
+              {
+                console.log(false);
+                // $('mis_arrow_img').attr('src',baseUrl+'assets/images/template/red-arrow.png');
+                $('mis_arrow_img').attr('src','http://overboxd.com/vicky/assets/images/template/red-arrow.png');
+              }
+              $('#mis_percent_display').text(d.mis_percent_display+"%");
+              // $('#dumpDiv').text(dStringified);
+              console.log(d.mis_upload_count);
+              console.log(d.diff_mis);
+              console.log(d.mis_percent_display);
+              console.log(d.isDiffPositive);
+              //mis data ends
 
 
 
-                    graph_temp_dynamic(d.a);
-                    // console.log("d.a: " +d.a);
-                    // console.log("d.toSting(): " +d.toString());
-                    // console.log("d:\n");
-                    // console.log(d);  
 
-                    // alert('begin:  '+d.begin);
-
-
-                  },
-                  error: function (jqXHR, textStatus, errorThrown) { alert("Connection error"); }   
-                  
-                });
-              
-
-                          }
-                        });
-                    
-                    });
+              graph_temp_dynamic(d.a);
+            },
+            error: function (jqXHR, textStatus, errorThrown) { alert("Connection error"); } 
+          });
+        }
+      });
+    });
 </script>
 </head>
 <body class="theme-default main-menu-animated">
@@ -704,7 +708,7 @@
             <span class="xlheading">Uploaded</span>
             <ul class="status_more">
               <li id="diff_mis" ><?php echo $diff_mis?></li>
-              <li><img <?php 
+              <li ><img id="mis_arrow_img"<?php 
                           if($diff_mis < 0) //still not being updated by daterange selector
                           {
                             echo "src=\"". base_url() ."assets/images/template/red-arrow.png\"";
