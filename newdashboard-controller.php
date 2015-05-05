@@ -50,15 +50,15 @@ class Newdashboard extends CI_Controller {
     
     public function submitDateRange()
     {
-    $start=$this->input->post('start');
-    $end=$this->input->post('end');
+    $start_ymd=$this->input->post('start');
+    $end_ymd=$this->input->post('end');
 
     // $start = implode('/', array_reverse(explode('-', $start)));
     // $end = implode('/', array_reverse(explode('-', $end)));
     // echo $this->dateFormatter("2015-05-01");
 
-    $start = str_replace('/','-',$start);
-    $end = str_replace('/','-',$end);
+    $start = str_replace('/','-',$start_ymd);
+    $end = str_replace('/','-',$end_ymd);
 
     // $start = "2015-05-01";
     // $end = "2015-05-05";
@@ -71,17 +71,14 @@ class Newdashboard extends CI_Controller {
     $start = $this->dateFormatter($start);
     $end = $this->dateFormatter($end);
 
-    $start_comparison = date('m-d-Y',strtotime($start . "+1 days"));
+    $start_comparison = date('Y-m-d',strtotime($start . "-$date_interval days"));
 
 
-    $response = array('start'=> $start, 'end' => $end, 'start_comparison' => $start_comparison, 'interval'=> $date_interval);
-    echo json_encode($response);
-    // $this->getInventoryData();
-    // echo json_encode($this->getMISdata());
-    
-
-    // $response = array('a'=>5);
+    $response = array('start'=> $start_ymd, 'end' => $end_ymd, 'start_comparison' => $start_comparison, 'interval'=> $date_interval);
     // echo json_encode($response);
+
+    echo json_encode($this->getMISdata2($start_comparison, $start_ymd, $end_ymd));
+    
     }
 
     public function dateFormatter($date)
@@ -89,8 +86,9 @@ class Newdashboard extends CI_Controller {
         // $array_ymd = explode('-', $date);
         // $array_ymd = array_reverse($array_ymd);
         // $date = implode('/', $array_ymd);
-
         // now $date format is dd/mm/yyy
+
+
         $date =  date('m-d-Y', strtotime($date));//need date in m-d-Y for "+x days" in strtotime
         $date = implode('/', explode('-', $date));
 
@@ -106,14 +104,18 @@ class Newdashboard extends CI_Controller {
         var_dump($table_sql);die;
         echo "</pre>";
     }
-    
-    public function getMISdata()
+
+        public function getMISdata2($start_comparison, $start_ymd, $end_ymd)
     {
         $returnArray = array();
         $hours = 600;
         $hours_compare = 2*$hours;
 
-        $query_total = $this->db->query("SELECT count(id) FROM `status_update_log` where new_status = 'listed' and time_stamp > date_sub(now(),interval $hours_compare hour)");
+        $from = $start_comparison;
+        $to = $end_ymd; 
+
+        // $query_total = $this->db->query("SELECT count(id) FROM `status_update_log` where new_status = 'listed' and time_stamp > date_sub(now(),interval $hours_compare hour)");
+        $query_total = $this->db->query("SELECT count(id) FROM status_update_log where new_status = 'listed' and date(time_stamp) >= '$from' and date(time_stamp) <= '$to'");
         $table_sql_compare = $query_total->result_array();
         $mis_upload_count_total = "";
         foreach ($table_sql_compare as $outerArray) 
@@ -126,7 +128,10 @@ class Newdashboard extends CI_Controller {
 
         // var_dump( $mis_upload_count_total);die;
 
-        $query = $this->db->query("SELECT count(id) FROM `status_update_log` where new_status = 'listed' and time_stamp > date_sub(now(),interval $hours hour)");
+        $from = $start_ymd;
+        $to = $end_ymd; 
+        // $query = $this->db->query("SELECT count(id) FROM `status_update_log` where new_status = 'listed' and time_stamp > date_sub(now(),interval $hours hour)");
+        $query = $this->db->query("SELECT count(id) FROM status_update_log where new_status = 'listed' and date(time_stamp) >= '$from' and date(time_stamp) <= '$to'");
         $table_sql = $query->result_array();
                         // $timeStamp1 = date("2014-05-04 00:00:00");
                         // $timeStamp2 = date("2015-05-04 19:36:17");
@@ -156,11 +161,67 @@ class Newdashboard extends CI_Controller {
         $returnArray["mis_upload_count"] = "" . $mis_upload_count;
         $returnArray["diff_mis"] = "" . $diff_mis;
         $returnArray["mis_percent_display"] = "" . $mis_percent_display;
+        $returnArray["isDiffPositive"] =  ($diff_mis>0);
 
         // echo "<pre>";
         // var_dump($returnArray);
         // echo "</pre>";
         return $returnArray;
-    }
-    
+    }    
+                                        public function getMISdata()
+                                        {
+                                            $returnArray = array();
+                                            $hours = 2/*600*/;
+                                            $hours_compare = 2*$hours;
+
+                                            $query_total = $this->db->query("SELECT count(id) FROM `status_update_log` where new_status = 'listed' and time_stamp > date_sub(now(),interval $hours_compare hour)");
+                                            $table_sql_compare = $query_total->result_array();
+                                            $mis_upload_count_total = "";
+                                            foreach ($table_sql_compare as $outerArray) 
+                                            {
+                                              foreach ($outerArray as $key => $value) 
+                                              {
+                                                $mis_upload_count_total = $value;
+                                              }
+                                            }
+
+                                            // var_dump( $mis_upload_count_total);die;
+
+                                            $query = $this->db->query("SELECT count(id) FROM `status_update_log` where new_status = 'listed' and time_stamp > date_sub(now(),interval $hours hour)");
+                                            $table_sql = $query->result_array();
+                                                            // $timeStamp1 = date("2014-05-04 00:00:00");
+                                                            // $timeStamp2 = date("2015-05-04 19:36:17");
+                                                            // $sqlo = "SELECT count(id) FROM status_update_log where new_status = 'listed' and date(time_stamp) > '$timeStamp1' and date(time_stamp) < '$timeStamp2'";
+                                                            // $query = $this->db->query($sqlo);
+                                                            // $table_sql = $query->result_array();
+                                                            // var_dump($table_sql);die;
+
+
+                                            $mis_upload_count = "";
+
+                                            foreach ($table_sql as $outerArray) 
+                                            {
+                                              foreach ($outerArray as $key => $value) 
+                                              {
+                                                $mis_upload_count = $value;
+                                              }
+                                            }
+                                            $compare_mis = $mis_upload_count_total - $mis_upload_count ;
+                                            $diff_mis= $mis_upload_count  - $compare_mis ;
+                                            $percent_mis =   ($compare_mis == 0) ? "Infinite" : ((double)($diff_mis / $compare_mis) * 100);
+
+                                            /*$mis_upload_count = "1";*/
+                                            /*$diff_mis = "2";*/
+                                            $mis_percent_display = /*"3";// = */(gettype($percent_mis ) == "string" ) ? $percent_mis :  number_format((float)$percent_mis, 2, '.', '');
+
+                                            $returnArray["mis_upload_count"] = "" . $mis_upload_count;
+                                            $returnArray["diff_mis"] = "" . $diff_mis;
+                                            $returnArray["mis_percent_display"] = "" . $mis_percent_display;
+
+                                            // echo "<pre>";
+                                            // var_dump($returnArray);
+                                            // echo "</pre>";
+                                            return $returnArray;
+                                        }
+
 }
